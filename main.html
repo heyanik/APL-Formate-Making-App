@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Textile Job Ticket Generator</title>
+    
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Libraries for generating Image (html2canvas) and PDF (jsPDF) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        /* Custom styles for the app */
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Styling for each individual ticket in the list */
+        .job-ticket {
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            transition: all 0.3s ease-in-out;
+            position: relative; /* Needed for positioning the remove button */
+        }
+        .job-ticket:hover {
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        .ticket-header {
+            border-bottom: 2px solid #f1f5f9;
+        }
+        .ticket-field {
+             border-bottom: 1px solid #f8fafc;
+        }
+         .ticket-field:last-child {
+             border-bottom: none;
+        }
+        /* Hide elements by default */
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen antialiased">
+
+    
+
+
+    <div class="container mx-auto p-4 sm:p-6 lg:p-8">
+        <header class="text-center mb-8">
+            <h1 class="text-3xl md:text-4xl font-bold text-gray-800">APL Party Final Program System</h1>
+            <p class="text-gray-500 mt-2">Create easy program tickets for the production line.</p>
+        </header>
+
+        <main class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <!-- Left Side: Input Form -->
+            <div class="bg-white p-6 md:p-8 rounded-xl shadow-lg self-start">
+                <h2 class="text-2xl font-semibold text-gray-700 mb-6">Enter Program Details</h2>
+                <form id="jobForm" class="space-y-6">
+                    <div>
+                        <label for="partyName" class="block text-sm font-medium text-gray-600 mb-1">Party Name</label>
+                        <input type="text" id="partyName" name="partyName" placeholder="e.g., ABC Textiles" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition">
+                        <p id="partyNameError" class="text-red-500 text-sm mt-1 hidden">Party Name is required.</p>
+                    </div>
+
+                    <div>
+                        <label for="machine" class="block text-sm font-medium text-gray-600 mb-1">Select Machine</label>
+                        <select id="machine" name="machine" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition bg-white">
+                            <option value="M1 (Homer)">M1 (Homer)</option>
+                            <option value="M2 (Atexco)">M2 (Atexco)</option>
+                            <option value="M3 (Atexco)">M3 (Atexco)</option>
+                        </select>
+                    </div>
+
+                    <!-- <div>
+                        <label for="designer" class="block text-sm font-medium text-gray-600 mb-1">Designer Name</label>
+                        <input type="text" id="designer" name="designer" placeholder="e.g., John Doe" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition">
+                    </div> -->
+
+
+<div>
+    <label for="designer" class="block text-sm font-medium text-gray-600 mb-1">Designer Name</label>
+    <select id="designer" name="designer" 
+        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition bg-white">
+        <option value="Anup">Anup</option>
+        <option value="Anik">Anik</option>
+        <option value="Uzzol">Uzzol</option>
+    </select>
+</div>
+
+
+
+
+
+                    <div>
+                        <label for="designNumber" class="block text-sm font-medium text-gray-600 mb-1">Design Number</label>
+                        <input type="text" id="designNumber" name="designNumber" placeholder="e.g., D-12345" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition">
+                    </div>
+
+
+                    <div>
+                        <label for="colors" class="block text-sm font-medium text-gray-600 mb-1">Colors Chosen</label>
+                        <textarea id="colors" name="colors" rows="4" placeholder="Enter each color name, e.g.,&#10;- A&#10;- D&#10;- G" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"></textarea>
+                    </div>
+                </form>
+
+                <!-- Add Job Button -->
+                <div class="mt-8">
+                    <button id="addJobBtn" class="w-full bg-blue-600 text-white font-semibold py-3 px-4 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-300 ease-in-out flex items-center justify-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" /></svg>
+                        Add Program to List
+                    </button>
+                </div>
+
+            </div>
+
+            <!-- Right Side: List of Tickets -->
+            <div class="bg-gray-50 p-6 md:p-8 rounded-xl">
+                 <h2 class="text-2xl font-semibold text-gray-700 mb-6">Program List</h2>
+                 <div id="ticketListContainer" class="space-y-4 bg-white p-4 rounded-lg border border-gray-200 min-h-[10rem]">
+                     <p id="emptyListMessage" class="text-gray-500 text-center py-8">The list is currently empty. Add programs using the form on the left.</p>
+                 </div>
+
+                 <!-- Action Buttons Container -->
+                <div id="actionButtonsContainer" class="mt-8 pt-6 border-t border-gray-200 flex flex-col sm:flex-row gap-4 hidden">
+                    <button id="generateImageBtn" class="w-full bg-indigo-600 text-white font-semibold py-3 px-4 rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-300 ease-in-out flex items-center justify-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd" /></svg>
+                        Generate Image of List
+                    </button>
+                    <button id="generatePdfBtn" class="w-full bg-teal-600 text-white font-semibold py-3 px-4 rounded-lg hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 transition duration-300 ease-in-out flex items-center justify-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z" /><path d="M5 5a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2v-3a1 1 0 10-2 0v3H5V7h3a1 1 0 000-2H5z" /></svg>
+                        Generate PDF of List
+                    </button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Get references to form and button elements
+            const jobForm = document.getElementById('jobForm');
+            const addJobBtn = document.getElementById('addJobBtn');
+            const generateImageBtn = document.getElementById('generateImageBtn');
+            const generatePdfBtn = document.getElementById('generatePdfBtn');
+            const partyNameInput = document.getElementById('partyName');
+            const partyNameError = document.getElementById('partyNameError');
+            
+            // Get references to containers and messages
+            const ticketListContainer = document.getElementById('ticketListContainer');
+            const emptyListMessage = document.getElementById('emptyListMessage');
+            const actionButtonsContainer = document.getElementById('actionButtonsContainer');
+
+            // Function to check and update the visibility of messages and buttons
+            function updateListState() {
+                const ticketCount = ticketListContainer.querySelectorAll('.job-ticket').length;
+                if (ticketCount > 0) {
+                    emptyListMessage.classList.add('hidden');
+                    actionButtonsContainer.classList.remove('hidden');
+                } else {
+                    emptyListMessage.classList.remove('hidden');
+                    actionButtonsContainer.classList.add('hidden');
+                }
+            }
+
+            // Hide error message when user starts typing
+            partyNameInput.addEventListener('input', () => {
+                if (partyNameInput.value.trim() !== '') {
+                    partyNameError.classList.add('hidden');
+                    partyNameInput.classList.remove('border-red-500');
+                }
+            });
+
+            // Event listener for the "Add Job" button
+            addJobBtn.addEventListener('click', () => {
+                const partyName = partyNameInput.value.trim();
+                const machine = document.getElementById('machine').value;
+                const designer = document.getElementById('designer').value.trim();
+                const designNumber = document.getElementById('designNumber').value.trim();
+                const colors = document.getElementById('colors').value.trim();
+
+                // Validation: Show/hide error message instead of alert
+                if (!partyName) {
+                    partyNameError.classList.remove('hidden');
+                    partyNameInput.classList.add('border-red-500');
+                    partyNameInput.focus();
+                    return;
+                } else {
+                    partyNameError.classList.add('hidden');
+                    partyNameInput.classList.remove('border-red-500');
+                }
+
+                // Create the new ticket element
+                const ticketElement = document.createElement('div');
+                ticketElement.className = 'job-ticket bg-white rounded-lg p-6';
+                
+                const ticketDate = new Date().toLocaleDateString();
+
+                ticketElement.innerHTML = `
+                    <button class="remove-btn absolute top-2 right-2 text-gray-400 hover:text-red-500 transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </button>
+                    <div class="ticket-header flex justify-between items-center pb-4 mb-4">
+                        <h3 class="text-xl font-bold text-gray-800">PRODUCTION TICKET</h3>
+                        <span class="text-sm text-gray-500">${ticketDate}</span>
+                    </div>
+                    <div class="ticket-body space-y-4 text-gray-700">
+                        <div class="ticket-field flex flex-col sm:flex-row pb-3">
+                            <strong class="w-full sm:w-1/3 font-semibold text-gray-500">Party Name:</strong>
+                            <span class="w-full sm:w-2/3 break-words">${partyName}</span>
+                        </div>
+                        <div class="ticket-field flex flex-col sm:flex-row pb-3">
+                            <strong class="w-full sm:w-1/3 font-semibold text-gray-500">Machine:</strong>
+                            <span class="w-full sm:w-2/3 break-words">${machine}</span>
+                        </div>
+                        <div class="ticket-field flex flex-col sm:flex-row pb-3">
+                            <strong class="w-full sm:w-1/3 font-semibold text-gray-500">Designer:</strong>
+                            <span class="w-full sm:w-2/3 break-words">${designer || 'N/A'}</span>
+                        </div>
+                        <div class="ticket-field flex flex-col sm:flex-row pb-3">
+                            <strong class="w-full sm:w-1/3 font-semibold text-gray-500">Design No:</strong>
+                            <span class="w-full sm:w-2/3 break-words">${designNumber || 'N/A'}</span>
+                        </div>
+                        <div class="ticket-field flex flex-col">
+                            <strong class="font-semibold text-gray-500 mb-2">Colors:</strong>
+                            <pre class="w-full p-3 bg-gray-50 rounded-md text-sm whitespace-pre-wrap font-sans">${colors || 'N/A'}</pre>
+                        </div>
+                    </div>
+                `;
+
+                // Add event listener to the remove button on the new ticket
+                ticketElement.querySelector('.remove-btn').addEventListener('click', () => {
+                    ticketElement.remove();
+                    updateListState(); // Check state after removing
+                });
+
+                // Append the new ticket to the list
+                ticketListContainer.appendChild(ticketElement);
+                
+                // Clear the form for the next entry
+                jobForm.reset();
+                
+                // Update the visibility of placeholder/buttons
+                updateListState();
+            });
+
+            // --- Generation Logic (targets the entire list container) ---
+
+            generateImageBtn.addEventListener('click', () => {
+                html2canvas(ticketListContainer, { 
+                    scale: 2, 
+                    useCORS: true,
+                    backgroundColor: '#f9fafb' // Match the container background
+                }).then(canvas => {
+                    const link = document.createElement('a');
+                    const date = new Date().toISOString().slice(0,10);
+                    link.download = `job_list_${date}.png`;
+                    link.href = canvas.toDataURL('image/png');
+                    link.click();
+                });
+            });
+
+            generatePdfBtn.addEventListener('click', () => {
+                const { jsPDF } = window.jspdf;
+                
+                html2canvas(ticketListContainer, { 
+                    scale: 2, 
+                    useCORS: true,
+                    backgroundColor: '#f9fafb' 
+                }).then(canvas => {
+                    const imgData = canvas.toDataURL('image/png');
+                    const pdf = new jsPDF({
+                        orientation: 'portrait',
+                        unit: 'px',
+                        format: [canvas.width, canvas.height]
+                    });
+                    
+                    pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
+                    const date = new Date().toISOString().slice(0,10);
+                    pdf.save(`job_list_${date}.pdf`);
+                });
+            });
+
+            // Initial check on page load
+            updateListState();
+        });
+    </script>
+ <!-- Footer -->
+    <footer class="bg-gray-200 text-center py-4 mt-12 rounded-t-lg">
+        <p class="text-sm text-gray-600">Developed by <span class="font-semibold">Alog2a</span></p>
+    </footer>
+</body>
+</html>
+
